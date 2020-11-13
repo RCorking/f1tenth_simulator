@@ -13,5 +13,16 @@ struct CarParams {
     double mass;
     double I_z; // moment of inertia about z axis from CG
 };
+struct twoWheelBotParameters
+{
+    double track;
+    double length;
+    double wheelRadius;
+    double mass;
+    double I_z;
+    double wheelDampingFactor;
+
+};
+
 
 }

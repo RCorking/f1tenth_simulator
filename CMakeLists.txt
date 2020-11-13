@@ -59,7 +59,9 @@ if(DEFINED CATKIN_DEVEL_PREFIX)
     std_msgs
     message_generation
     )
-
+  add_message_files(FILES
+    diff_drive.msg
+    )
   generate_messages(
     DEPENDENCIES
     std_msgs

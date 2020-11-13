@@ -13,4 +13,15 @@ struct CarState {
     bool st_dyn;
 };
 
+struct twoWheelBotState{
+    double x;
+    double y;
+    double theta;
+    double velocity;
+    double angular_velocity;
+    double leftWheelSpeed;
+    double rightWheelSpeed;
+    bool st_dyn;
+};
+
 }
