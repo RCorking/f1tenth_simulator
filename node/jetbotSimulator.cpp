@@ -9,6 +9,7 @@
 #include <ackermann_msgs/AckermannDriveStamped.h>
 #include <nav_msgs/Odometry.h>
 #include <std_msgs/Int32MultiArray.h>
+#include <std_msgs/Float64MultiArray.h>
 
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -49,9 +50,9 @@ private:
     double previous_seconds;
     double max_wheel_speed;
     double max_wheel_torque;
-    double desired_speed, desired_curvature;
+    //double desired_speed, desired_curvature;
     double accel;
-    double angularVleocityThreshold;
+    double angularVelocityThreshold;
     double rightWheelTorqueCommand;
     double leftWheelTorqueCommand;
     twoWheelBotParameters jetbotParameters;
@@ -102,10 +103,18 @@ public:
     jetbotSimulator(): im_server("jetbot_sim"){
         n = ros::NodeHandle("~");
 
-        jetbotState = {.x=0, .y=0, .theta=0, .velocity=0, .angular_velocity=0, .leftWheelSpeed=0, .rigthWheelSpeed=0, .std_dyn=false};
+        jetbotState = {.x=0.0, .y=0.0, .theta=0.0, .velocity=0.0, .angular_velocity=0.0, .leftWheelSpeed=0.0, .rightWheelSpeed=0.0, .std_dyn=false};
+        /**jetbotState.x = 0.0; 
+        jetbotState.y = 0.0;
+        jetbotState.theta = 0.0;
+        jetbotState.velocity = 0.0;
+        jetbotState.angular_elocity = 0.0;
+        jetbotState.leftWheelSpeed = 0.0;
+        jetbotState.rightWheelSpeed = 0.0;
+        jetbotState.std_dyn = false;**/
         accel = 0.0;
-        desired_speed = 0.0;
-        desire_curvature = 0.0;
+        //desired_speed = 0.0;
+        //desired_curvature = 0.0;
         previous_seconds = ros::Time::now().toSec();
 
         // Get the topic names
@@ -124,15 +133,17 @@ public:
         n.getParam("base_frame", base_frame);
 
         //Fetch car parameters
+        double update_pose_rate;
         n.getParam("update_pose_rate", update_pose_rate);
-        n.getParam("jetBot_max_wheel_speed", max_wheel_speed);
-        n.getParam("jetBot_max_wheel_torque", max_wheel_torque);
-        n.getParam("jetBot_mas", jetBotParameters.mass);
-        n.getParam("jetBot_wheel_radius", jetBotParameters.wheelRadius);
-        n.getParam("jetBot_length" , jetBotParameters.length);
-        n.getParam("jetBot_width", jetBotParameters.track);
-        n.getParam("jetbot_wheel_damping" , jetBotParameters.wheelDampingFactor);
-        jetBotParameters.I_z=(1.0/12.0)*(jetBotParameters.mass)*(jetBotParameters.track^2 + jetBotParameters.length^2);   
+        n.getParam("jetbot_max_wheel_speed", max_wheel_speed);
+        n.getParam("jetbot_max_wheel_torque", max_wheel_torque);
+        n.getParam("jetbot_mass", jetbotParameters.mass);
+        n.getParam("jetbot_wheel_radius", jetbotParameters.wheelRadius);
+        n.getParam("jetbot_length" , jetbotParameters.length);
+        n.getParam("jetbot_width", jetbotParameters.track);
+        n.getParam("jetbot_wheel_damping" , jetbotParameters.wheelDampingFactor);
+        jetbotParameters.I_z=(1.0/12.0)*(jetbotParameters.mass)*
+            (pow(jetbotParameters.track,2.0) + pow(jetbotParameters.length,2.0));   
 
         // Determine if we should broadcast
         n.getParam("broadcast_transform", broadcast_transform);
@@ -145,26 +156,26 @@ public:
         odom_pub = n.advertise<nav_msgs::Odometry>(odom_topic, 1);
 
         // Make a publisher for publishing map with obstacles
-        map_pub = n.advertise<nav_msgs::OccupancyGrid>("/map", 1);
+        //map_pub = n.advertise<nav_msgs::OccupancyGrid>("/map", 1);
 
         // Make a publisher for ground truth pose
         pose_pub = n.advertise<geometry_msgs::PoseStamped>(gt_pose_topic, 1);
 
         // Start a timer to output the pose
-        update_pose_timer = n.createTimer(ros::Duration(update_pose_rate), &jetBotSimulator::update_pose, this);
+        update_pose_timer = n.createTimer(ros::Duration(update_pose_rate), &jetbotSimulator::update_pose, this);
 
         // Start a subscriber to listen to drive commands
-        drive_sub = n.subscribe(diff_drive_topic, 1, &jetBotSimulator::drive_callback, this);
+        drive_sub = n.subscribe(diff_drive_topic, 1, &jetbotSimulator::drive_callback, this);
 
         // Start a subscriber to listen to new maps
-        //map_sub = n.subscribe(map_topic, 1, &jetBotSimulator::map_callback, this);
+        //map_sub = n.subscribe(map_topic, 1, &jetbotSimulator::map_callback, this);
 
         // Start a subscriber to listen to pose messages
-        pose_sub = n.subscribe(pose_topic, 1, &jetBotSimulator::pose_callback, this);
-        pose_rviz_sub = n.subscribe(pose_rviz_topic, 1, &jetBotSimulator::pose_rviz_callback, this);
+        pose_sub = n.subscribe(pose_topic, 1, &jetbotSimulator::pose_callback, this);
+        pose_rviz_sub = n.subscribe(pose_rviz_topic, 1, &jetbotSimulator::pose_rviz_callback, this);
 
         // obstacle subscriber
-        obs_sub = n.subscribe("/clicked_point", 1, &jetBotSimulator::obs_callback, this);
+        //obs_sub = n.subscribe("/clicked_point", 1, &jetbotSimulator::obs_callback, this);
 
         // get collision safety margin
         n.getParam("coll_threshold", thresh);
@@ -173,6 +184,7 @@ public:
 
         // OBSTACLE BUTTON:
         // wait for one map message to get the map data array
+        /**
         boost::shared_ptr<nav_msgs::OccupancyGrid const> map_ptr;
         nav_msgs::OccupancyGrid map_msg;
         map_ptr = ros::topic::waitForMessage<nav_msgs::OccupancyGrid>("/map");
@@ -221,15 +233,16 @@ public:
         clear_obs_button.controls.push_back(clear_obs_control);
 
         im_server.insert(clear_obs_button);
-        im_server.setCallback(clear_obs_button.name, boost::bind(&jetBotSimulator::clear_obstacles, this, _1));
+        im_server.setCallback(clear_obs_button.name, boost::bind(&jetbotSimulator::clear_obstacles, this, _1));
 
         im_server.applyChanges();
+        **/
 
         ROS_INFO("Simulator constructed.");
     
     }
 
-    void update_pose(const ros::TimerEvenet&){
+    void update_pose(const ros::TimerEvent&){
 
         // Update the pose 
         ros::Time timestamp = ros::Time::now();
@@ -242,8 +255,8 @@ public:
             angularVelocityThreshold,
             current_seconds - previous_seconds);
             
-        jetBotState.leftWheelSpeed = std::min(std::max(jetbotState.leftWheelSpeed , -max_wheel_speed),max_wheel_speed);
-        jetBotState.rightWheelSpeed = std::min(std::max(jetbotState.rightWheelSpeed , -max_wheel_speed),max_wheel_speed);
+        jetbotState.leftWheelSpeed = std::min(std::max(jetbotState.leftWheelSpeed , -max_wheel_speed),max_wheel_speed);
+        jetbotState.rightWheelSpeed = std::min(std::max(jetbotState.rightWheelSpeed , -max_wheel_speed),max_wheel_speed);
         previous_seconds = current_seconds;
 
         /// Publish the pose as a transformation
@@ -312,20 +325,20 @@ public:
             odom_pub.publish(odom);
     }
         //--Callback Functions-----//
-    void drive_callback(const diffDriveMsgs::motorCmd &msg){
-            rightWheelTorqueCommand = msg.rightWheelTorque;
-            leftWheelTorqueCommand = msg.leftWheelTorque;
+    void drive_callback(const std_msgs::Float64MultiArray &msg){
+            rightWheelTorqueCommand = msg.data[0];
+            leftWheelTorqueCommand = msg.data[1];
             rightWheelTorqueCommand = (std::min(std::max(rightWheelTorqueCommand, -1.0),1.0))*
                                         max_wheel_torque;
-            leftWheelTorqueCommand = (std::min(std::max(leftWheelTorqueCommand, -1),1))*
+            leftWheelTorqueCommand = (std::min(std::max(leftWheelTorqueCommand, -1.0),1.0))*
                                         max_wheel_torque;        
     }
     void pose_callback(const geometry_msgs::PoseStamped & msg) {
-        state.x = msg.pose.position.x;
-        state.y = msg.pose.position.y;
+        jetbotState.x = msg.pose.position.x;
+        jetbotState.y = msg.pose.position.y;
         geometry_msgs::Quaternion q = msg.pose.orientation;
         tf2::Quaternion quat(q.x, q.y, q.z, q.w);
-        state.theta = tf2::impl::getYaw(quat);
+        jetbotState.theta = tf2::impl::getYaw(quat);
     }
     void pose_rviz_callback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr & msg) {
         geometry_msgs::PoseStamped temp_pose;
@@ -333,7 +346,7 @@ public:
         temp_pose.pose = msg->pose.pose;
         pose_callback(temp_pose);
     }
-    void clear_obstacles(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback) {
+    /**void clear_obstacles(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback) {
         bool clear_obs_clicked = false;
         if (feedback->event_type == 3) {
             clear_obs_clicked = true;
@@ -345,14 +358,14 @@ public:
 
             clear_obs_clicked = false;
         }
-    }
+    }**/
 
     
 
 
 };
-int main(argc, char ** argv){
-    ros::init(argc, argv, "jetBotSimulator");
+int main(int argc, char ** argv){
+    ros::init(argc, argv, "jetbotSimulator");
     jetbotSimulator jetSim;
     ros::spin();
     return 0;

@@ -13,7 +13,7 @@ struct CarState {
     bool st_dyn;
 };
 
-struct twoWheelBotState{
+struct twoWheelBotState {
     double x;
     double y;
     double theta;
@@ -21,7 +21,7 @@ struct twoWheelBotState{
     double angular_velocity;
     double leftWheelSpeed;
     double rightWheelSpeed;
-    bool st_dyn;
+    bool std_dyn;
 };
 
 }

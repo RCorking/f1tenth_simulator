@@ -29,18 +29,20 @@ twoWheelBotState jetbotDynamics::update(
         double updatedX = initialState.x + std::cos(initialState.theta)*updatedLinearVelocity*dt;
         double udpatedY = initialState.y + std::sin(initialState.theta)*updatedLinearVelocity*dt;
         double instatTurnRadius;
+        double updatedRightWheelSpeed;
+        double updatedLeftWheelSpeed;
         if (abs(updatedAngularVelocity) >= thresh){
             instatTurnRadius = updatedLinearVelocity/updatedAngularVelocity;
-            double updatedRightWheelSpeed = ((instatTurnRadius + carParameters.track/2)/(instatTurnRadius))*
+            updatedRightWheelSpeed = ((instatTurnRadius + carParameters.track/2)/(instatTurnRadius))*
                                                updatedLinearVelocity/carParameters.wheelRadius;
-            double updatedLeftWheelSpeed = ((instatTurnRadius - carParameters.track/2)/instatTurnRadius)*
+            updatedLeftWheelSpeed = ((instatTurnRadius - carParameters.track/2)/instatTurnRadius)*
                                                 updatedLinearVelocity/carParameters.wheelRadius;
             
 
         }else{
             instatTurnRadius = 0;
-            double updatedRightWheelSpeed = updatedLinearVelocity/carParameters.wheelRadius;
-            double updatedLeftWheelSpeed = updatedLinearVelocity/carParameters.wheelRadius;
+            updatedRightWheelSpeed = updatedLinearVelocity/carParameters.wheelRadius;
+            updatedLeftWheelSpeed = updatedLinearVelocity/carParameters.wheelRadius;
         }
 
         finalState = {  .x = updatedX,
@@ -48,8 +50,9 @@ twoWheelBotState jetbotDynamics::update(
                         .theta = updatedHeading,
                         .velocity = updatedLinearVelocity,
                         .angular_velocity = updatedAngularVelocity,
-                        .rightWheelSpeed = updatedRightWheelSpeed, 
                         .leftWheelSpeed = updatedLeftWheelSpeed,
+                        .rightWheelSpeed = updatedRightWheelSpeed,
+                        .std_dyn= false 
                       };
 
 

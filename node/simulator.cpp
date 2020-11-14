@@ -52,15 +52,13 @@ private:
 
     // The car state and parameters
     CarState state;
-    twoWheelBotState jetbotState;
     double previous_seconds;
     double scan_distance_to_base_link;
-    double max_speed, max_steering_angle, max_wheel_speed;
-    double max_accel, max_steering_vel, max_decel, max_wheel_accel;
-    double desired_speed, desired_steer_ang, desired_curvature;
+    double max_speed, max_steering_angle;
+    double max_accel, max_steering_vel, max_decel;
+    double desired_speed, desired_steer_ang;
     double accel, steer_angle_vel;
     CarParams params;
-    twoWheelBotParameters jetbotParameters;
     double width;
 
     // A simulator of the laser
@@ -137,17 +135,15 @@ public:
 
         // Initialize car state and driving commands
         state = {.x=0, .y=0, .theta=0, .velocity=0, .steer_angle=0.0, .angular_velocity=0.0, .slip_angle=0.0, .st_dyn=false};
-        //jetbotState = {.x =0, .y=0, .theta=0, .velocity=0, .angular_velocity=0, .leftWheelspeed=0, .rightWheelSpeed=0, .std_dyn=false}
         accel = 0.0;
         steer_angle_vel = 0.0;
         desired_speed = 0.0;
         desired_steer_ang = 0.0;
-        desire_curvature = 0.0;
         previous_seconds = ros::Time::now().toSec();
 
         // Get the topic names
         std::string drive_topic, map_topic, scan_topic, pose_topic, gt_pose_topic, 
-        pose_rviz_topic, odom_topic, imu_topic, diff_drive_topic;
+        pose_rviz_topic, odom_topic, imu_topic;
         n.getParam("drive_topic", drive_topic);
         n.getParam("map_topic", map_topic);
         n.getParam("scan_topic", scan_topic);
@@ -156,7 +152,6 @@ public:
         n.getParam("pose_rviz_topic", pose_rviz_topic);
         n.getParam("imu_topic", imu_topic);
         n.getParam("ground_truth_pose_topic", gt_pose_topic);
-        n.getParam("diff_drive_topic", diff_drive_topic);
 
         // Get steering delay params
         n.getParam("buffer_length", buffer_length);
@@ -190,7 +185,6 @@ public:
         n.getParam("moment_inertia", params.I_z);
         n.getParam("mass", params.mass);
         n.getParam("width", width);
-
 
         // clip velocity
         n.getParam("speed_clip_diff", speed_clip_diff);
