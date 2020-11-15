@@ -22,12 +22,12 @@ C_S_rear: 5.4562 #.79 # 1/rad ? (estimated weight/4)
 mass: 3.47 # kg (measured on car 'lidart')
 moment_inertia: .04712 # kg m^2 (estimated as a rectangle with width and height of car and evenly distributed mass, then shifted to account for center of mass location)
 # Jetbot parameters and limits
-jetBot_max_wheel_speed: 20.9 #rad/s
+jetbot_max_wheel_speed: 20.9 #rad/s
 jetbot_max_wheel_torque: 0.6 #N/m
 jetbot_wheel_radius: 0.05 #meters
 jetbot_mass: 0.5 #kg
-jetBot_width: 0.1 #meters
-jetBot_length: 0.2 #meters 
+jetbot_width: 0.1 #meters
+jetbot_length: 0.2 #meters 
 jetbot_wheel_damping: 0.1 # damping factor to slow down the wheels when no torque is applied 
 angular_velocity_threshold: 0.1 # threshold to avoid singular turn radius in dynamics  
 # The rate at which the pose and the lidar publish
