@@ -46,12 +46,13 @@ public:
     {
         n = ros::NodeHandle("~");
 
-        std::string diff_drive_topic, mux_topic, joy_topic, key_topic n.getParam("diff_drive_topic", diff_drive_topic);
+        std::string diff_drive_topic, mux_topic, joy_topic, key_topic;
+	n.getParam("diff_drive_topic", diff_drive_topic);
         //n.getParam("joy_topic", joy_topic);
         //n.getParam("mux_topic", mux_topic);
-        //n.getParam("keyboard_topic", key_topic);
+        n.getParam("keyboard_topic", key_topic);
 
-        diff_drive_pub = n.advertise<std_msgs::float64MultiArray>(diff_drive_topic, 10);
+        diff_drive_pub = n.advertise<std_msgs::Float64MultiArray>(diff_drive_topic, 10);
 
         //mux_sub = n.subscribe(mux_topic, 1, &jetbotDriveCmd::mux_callback, this);
 
@@ -85,9 +86,9 @@ public:
         channels.push_back(new_channel);
     }**/
 
-    void publish_to_diff_drive(double rightWheelTrq, leftWheelTrq)
+    void publish_to_diff_drive(double rightWheelTrq,double leftWheelTrq)
     {
-        std_msgs::float64MultiArray diffDriveMsg;
+        std_msgs::Float64MultiArray diffDriveMsg;
         diffDriveMsg.data[0] = rightWheelTrq;
         diffDriveMsg.data[1] = leftWheelTrq;
 
@@ -124,7 +125,7 @@ public:
             publish_to_drive(0.0, 0.0);
         }
     }**/
-    void key_callback(const std::msgs:String & msg){
+    void key_callback(const std_msgs::String & msg){
         double leftWheelTrq;
         double rightWheelTrq;
 
@@ -147,7 +148,7 @@ public:
             rightWheelTrq = -1.0;
         }else if (msg.data ==" "){
             leftWheelTrq = 0.0;
-            rigthWheelTrq = 0.0;
+            rightWheelTrq = 0.0;
         }else {
             publish = false;
         }
@@ -157,5 +158,12 @@ public:
         }
     }
    
-}
+};
+int main(int argc, char ** argv){
+  ros::init(argc, argv, "jetbotPub");
+  jetbotDriveCmd jetDriver;
+  ros::spin();
+  return 0;
+  }
+
 
