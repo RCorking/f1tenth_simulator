@@ -16,4 +16,9 @@ class jetbotDynamics{
             double dt);
     
 };
+    double timeConstant; // time to 90% of ss response
+    const double& state;
+    double filterUpdate(double);
+    lowPassFilter(double , double, double&);
+};
 }
