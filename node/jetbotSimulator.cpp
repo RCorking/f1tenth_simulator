@@ -263,16 +263,15 @@ public:
         // Update the pose 
         ros::Time timestamp = ros::Time::now();
         double current_seconds = timestamp.toSec();
-        jetbotState = jetbotDynamics::update(
+        jetbotState = jetbotKinematics::kinematicUpdate(
             jetbotState,
-            rightWheelTorqueCommand,
-            leftWheelTorqueCommand,
+            rightWheelSpeed,
+            leftWheelSpeed,
             jetbotParameters,
-            angularVelocityThreshold,
             current_seconds - previous_seconds);
             
-        jetbotState.leftWheelSpeed = std::min(std::max(jetbotState.leftWheelSpeed , -max_wheel_speed),max_wheel_speed);
-        jetbotState.rightWheelSpeed = std::min(std::max(jetbotState.rightWheelSpeed , -max_wheel_speed),max_wheel_speed);
+        //jetbotState.leftWheelSpeed = std::min(std::max(jetbotState.leftWheelSpeed , -max_wheel_speed),max_wheel_speed);
+        //jetbotState.rightWheelSpeed = std::min(std::max(jetbotState.rightWheelSpeed , -max_wheel_speed),max_wheel_speed);
         previous_seconds = current_seconds;
 
         /// Publish the pose as a transformation

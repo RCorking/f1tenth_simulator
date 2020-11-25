@@ -13,8 +13,7 @@ twoWheelBotState jetbotDynamics::update(
     double leftWheelTorque,
     twoWheelBotParameters carParameters,
     const double thresh,
-    double dt,
-    bool dynamicSim) {
+    double dt) {
 
     double err = 0.3; // deadband to avoid flip flop 
 
