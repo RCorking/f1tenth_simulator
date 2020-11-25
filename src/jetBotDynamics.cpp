@@ -21,14 +21,12 @@ twoWheelBotState jetbotDynamics::update(
     twoWheelBotState finalState;
     double rightWheelForce, leftWheelForce, forwardAcceleration, angularAcceleration, updatedLinearVelocity, updatedAngularVelocity, instatTurnRadius,
         updatedRightWheelSpeed, updatedLeftWheelSpeed;
-    if (dynamicSim) {
         rightWheelForce = carParameters.wheelRadius * rightWheelTorque - carParameters.wheelDampingFactor * initialState.rightWheelSpeed;
         leftWheelForce = carParameters.wheelRadius * leftWheelTorque - carParameters.wheelDampingFactor * initialState.leftWheelSpeed;
         forwardAcceleration = (rightWheelForce + leftWheelForce) / carParameters.mass;
         angularAcceleration = (rightWheelForce - leftWheelForce) * (carParameters.track) / (2.0);
         updatedLinearVelocity = initialState.velocity + dt * forwardAcceleration;
         updatedAngularVelocity = initialState.angular_velocity + dt * angularAcceleration;
-
         instatTurnRadius;
         updatedRightWheelSpeed;
         updatedLeftWheelSpeed;
@@ -38,25 +36,17 @@ twoWheelBotState jetbotDynamics::update(
                 updatedLinearVelocity / carParameters.wheelRadius;
             updatedLeftWheelSpeed = ((instatTurnRadius - carParameters.track / 2) / instatTurnRadius) *
                 updatedLinearVelocity / carParameters.wheelRadius;
-
-
         }
         else {
             instatTurnRadius = 0;
             updatedRightWheelSpeed = updatedLinearVelocity / carParameters.wheelRadius;
             updatedLeftWheelSpeed = updatedLinearVelocity / carParameters.wheelRadius;
         }
-    }
-    else {
-
-
-
-    }
+    
     double updatedHeading = initialState.theta + dt * updatedAngularVelocity;
     double updatedX = initialState.x + std::cos(initialState.theta) * updatedLinearVelocity * dt;
     double udpatedY = initialState.y + std::sin(initialState.theta) * updatedLinearVelocity * dt;
-
-        finalState = { .x = updatedX,
+        finalState = {  .x = updatedX,
                         .y = udpatedY,
                         .theta = updatedHeading,
                         .velocity = updatedLinearVelocity,
@@ -65,22 +55,36 @@ twoWheelBotState jetbotDynamics::update(
                         .rightWheelSpeed = updatedRightWheelSpeed,
                         .std_dyn = false
         };
-
-
-        return finalState;
-
-
+        return finalState;    
+}
+lowPassFilter::lowPassFilter(double timeConst, double& filterState) :  state(filterState) {
+    filterCoefficient = -timeConst / (2.3);
+}
+double lowPassFilter::update(double dt, double input) {
+    double filterOutput;
+    filterOutput = state * (filterCoefficient / (dt + filterCoefficient)) + input * (filterCoefficient / (dt + filterCoefficient));
+    return filterOutput;
+}
+twoWheelBotState jetbotKinematics::kinematicUpdate(
+    const twoWheelBotState initialState,
+    double  rightWheelSpeed,
+    double  leftWheelSpeed,
+    twoWheelBotParameters carParameters,
+    double dt) {
+    twoWheelBotState finalState;
+    double rightLinearWheelSPeed = carParameters.wheelRadius * rightWheelSpeed;
+    double leftLinearWheelSpeed = carParameters.wheelRadius * leftWheelSpeed;
+    finalState.leftWheelSpeed = leftWheelSpeed;
+    finalState.rightWheelSpeed = rightWheelSpeed;
+    finalState.angular_velocity = (rightLinearWheelSPeed - leftLinearWheelSpeed) / (carParameters.track);
+    finalState.velocity = (rightLinearWheelSPeed + leftLinearWheelSpeed) / 2;
+    finalState.theta = initialState.theta + finalState.angular_velocity * dt;
+    finalState.x = initialState.x + std::cos(finalState.theta) * finalState.velocity * dt;
+    finalState.y = initialState.y + std::sin(finalState.theta) * finalState.velocity * dt;
+    finalState.std_dyn = false;
+    return finalState;
     
 }
-lowPassFilter::lowPassFilter(double timeStep, double timeConst, double& filterState) : dt(timeStep), timeConstant(timeConst), state(filterState) {}
-  
-
- double lowPassFilter::filterUpdate(double input) {
-     double filterCoefficient = -timeConstant / (2.3);
-     double filterOutput;
-     filterOutput = state * (filterCoefficient / (dt + filterCoefficient)) + input * (dt / (dt + filterCoefficient));
-     return filterOutput;
- }
 
 
 

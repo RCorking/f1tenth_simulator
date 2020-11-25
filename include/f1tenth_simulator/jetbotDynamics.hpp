@@ -17,8 +17,18 @@ class jetbotDynamics{
     
 };
     double timeConstant; // time to 90% of ss response
+    double filterCoefficient; // time to 90% of ss response
     const double& state;
-    double filterUpdate(double);
-    lowPassFilter(double , double, double&);
+    double update(double dt, double input);
+    lowPassFilter(double, double&);
+};
+class jetbotKinematics {
+public:
+    static twoWheelBotState kinematicUpdate(
+        const twoWheelBotState initialState,
+        double  rightWheelSpeed,
+        double  leftWheelSpeed,
+        twoWheelBotParameters carParameters,
+        double dt);
 };
 }

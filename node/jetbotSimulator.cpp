@@ -40,6 +40,7 @@ private:
     std::vector<int> added_obs;
     // listen for clicked point for adding obstacles
     ros::Subscriber obs_sub;
+    
     int obstacle_size;
 
     // interactive markers' server
@@ -48,6 +49,7 @@ private:
     // The car state and parameters
     twoWheelBotState jetbotState;
     double previous_seconds;
+    double previousTime;  // required to udpate keyboard input timestep.NASTY, DO IT BETTER
     double max_wheel_speed;
     double max_wheel_torque;
     //double desired_speed, desired_curvature;
@@ -55,8 +57,15 @@ private:
     double angularVelocityThreshold;
     double rightWheelTorqueCommand;
     double leftWheelTorqueCommand;
+    double rightWheelSpeed = 0;
+    double leftWheelSpeed = 0;
+    double max_car_speed;
+    double max_steer_angle;
+    double motorTimeConstant;
+    std::string keyboardCommand;
     twoWheelBotParameters jetbotParameters;
-
+    lowPassFilter rightWheelFilter(motorTimeConstant, rightWheelSpeed);
+    lowPassFilter leftWheelFitler(motorTimeConstant, leftWheelSpeed);
     // For publishing transformations
     tf2_ros::TransformBroadcaster br;
 
@@ -65,6 +74,7 @@ private:
 
     // Listen for drive commands
     ros::Subscriber drive_sub;
+    ros::Subscriber key_sub;
 
     // Listen for a map
     ros::Subscriber map_sub;
@@ -116,10 +126,12 @@ public:
         //desired_speed = 0.0;
         //desired_curvature = 0.0;
         previous_seconds = ros::Time::now().toSec();
+        previousTime = ros::Time::now().toSec();
+
 
         // Get the topic names
         std::string drive_topic, map_topic, pose_topic, gt_pose_topic, 
-        pose_rviz_topic, odom_topic, diff_drive_topic;
+        pose_rviz_topic, odom_topic, diff_drive_topic, keyboard_topic;
         n.getParam("drive_topic", drive_topic);
         n.getParam("map_topic", map_topic);    
         n.getParam("pose_topic", pose_topic);
@@ -127,6 +139,7 @@ public:
         n.getParam("pose_rviz_topic", pose_rviz_topic);
         n.getParam("ground_truth_pose_topic", gt_pose_topic);
         n.getParam("diff_drive_topic", diff_drive_topic);
+        n.getParam("keyboard_topic", keyboard_topic);
 
         // Get the transformation frame names
         n.getParam("map_frame", map_frame);
@@ -137,6 +150,8 @@ public:
         n.getParam("update_pose_rate", update_pose_rate);
         n.getParam("jetbot_max_wheel_speed", max_wheel_speed);
         n.getParam("jetbot_max_wheel_torque", max_wheel_torque);
+        n.getParam("jetbot_max_speed", max_car_speed);
+        n.getParam("jetbot_max_steer", max_steer_angle);
         n.getParam("jetbot_mass", jetbotParameters.mass);
         n.getParam("jetbot_wheel_radius", jetbotParameters.wheelRadius);
         n.getParam("jetbot_length" , jetbotParameters.length);
@@ -166,6 +181,7 @@ public:
 
         // Start a subscriber to listen to drive commands
         drive_sub = n.subscribe(diff_drive_topic, 1, &jetbotSimulator::drive_callback, this);
+        key_sub = n.subscribe(keyboard_topic, 1, &jetbotSimulator::pose_callback, this);
 
         // Start a subscriber to listen to new maps
         //map_sub = n.subscribe(map_topic, 1, &jetbotSimulator::map_callback, this);
@@ -332,6 +348,30 @@ public:
                                         max_wheel_torque;
             leftWheelTorqueCommand = (std::min(std::max(leftWheelTorqueCommand, -1.0),1.0))*
                                         max_wheel_torque;        
+    }
+    void key_callback(const std_msgs::String& msg) {
+        double currentTime = timestamp.toSec();
+        double dt = currentTime - previousTime;
+        switch (msg.data) {
+        case "w":
+            rightWheelSpeed = rightWheelFilter.update(dt, max_wheel_speed);
+            leftWheelSpeed = leftWheelFitler.update(dt, max_wheel_speed);
+        case "a":
+            rightWheelSpeed = rightWheelFilter.update(dt, max_wheel_speed);
+            leftWheelSpeed = leftWheelFitler.update(dt, -max_wheel_speed);
+        case "d":
+            rightWheelSpeed = rightWheelFilter.update(dt, -max_wheel_speed);
+            leftWheelSpeed = leftWheelFitler.update(dt, max_wheel_speed);
+        case "s":
+            rightWheelSpeed = rightWheelFilter.update(dt, -max_wheel_speed);
+            leftWheelSpeed = leftWheelFitler.update(dt, -max_wheel_speed);
+        case" ":
+            rightWheelSpeed = rightWheelFilter.update(dt, 0);
+            leftWheelSpeed = leftWheelFitler.update(dt, 0);
+
+        }
+        previousTime = currentTime;
+
     }
     void pose_callback(const geometry_msgs::PoseStamped & msg) {
         jetbotState.x = msg.pose.position.x;
