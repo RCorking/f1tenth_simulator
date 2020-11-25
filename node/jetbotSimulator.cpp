@@ -10,6 +10,7 @@
 #include <nav_msgs/Odometry.h>
 #include <std_msgs/Int32MultiArray.h>
 #include <std_msgs/Float64MultiArray.h>
+#include <std_msgs/String.h>
 
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -64,8 +65,8 @@ private:
     double motorTimeConstant;
     std::string keyboardCommand;
     twoWheelBotParameters jetbotParameters;
-    lowPassFilter rightWheelFilter(motorTimeConstant, rightWheelSpeed);
-    lowPassFilter leftWheelFitler(motorTimeConstant, leftWheelSpeed);
+    lowPassFilter rightWheelFilter;
+    lowPassFilter leftWheelFitler;
     // For publishing transformations
     tf2_ros::TransformBroadcaster br;
 
@@ -253,6 +254,8 @@ public:
 
         im_server.applyChanges();
         **/
+        rightWheelFilter = lowPassFilter(motorTimeConstant, rightWheelSpeed);
+        leftWheelFitler = lowPassFilter(motorTimeConstant, leftWheelSpeed);
 
         ROS_INFO("Simulator constructed.");
     
@@ -349,6 +352,7 @@ public:
                                         max_wheel_torque;        
     }
     void key_callback(const std_msgs::String& msg) {
+        ros::Time timestamp = ros::Time::now();
         double currentTime = timestamp.toSec();
         double dt = currentTime - previousTime;
         switch (msg.data) {
