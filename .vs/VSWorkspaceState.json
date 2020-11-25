@@ -6,6 +6,6 @@
     "\\node",
     "\\src"
   ],
-  "SelectedNode": "\\include\\f1tenth_simulator\\car_state.hpp",
+  "SelectedNode": "\\node\\jetbotSimulator.cpp",
   "PreviewInSolutionExplorer": false
 }

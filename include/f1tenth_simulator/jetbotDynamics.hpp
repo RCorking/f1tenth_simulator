@@ -13,10 +13,11 @@ class jetbotDynamics{
             double leftWheelTorque,
             twoWheelBotParameters carParameters,
             const double thresh,
-            double dt);
+            double dt); 
     
 };
-    double timeConstant; // time to 90% of ss response
+class lowPassFilter {
+public:
     double filterCoefficient; // time to 90% of ss response
     const double& state;
     double update(double dt, double input);
