@@ -57,7 +57,7 @@ if(DEFINED CATKIN_DEVEL_PREFIX)
     visualization_msgs
 
     std_msgs
-    message_generation
+    #message_generation
     )
   generate_messages(
     DEPENDENCIES

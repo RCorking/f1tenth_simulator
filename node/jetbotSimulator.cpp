@@ -16,12 +16,10 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/PointStamped.h>
 
-#include "f1tenth_simulator/pose_2d.hpp"
-#include "f1tenth_simulator/ackermann_kinematics.hpp"
+
 
 #include "f1tenth_simulator/car_state.hpp"
 #include "f1tenth_simulator/car_params.hpp"
-#include "f1tenth_simulator/precompute.hpp"
 #include "f1tenth_simulator/jetbotDynamics.hpp"
 
 #include <iostream>
@@ -208,7 +206,6 @@ public:
         double dt = current_seconds - previous_seconds;
         rightWheelSpeed = rightWheelFilter.update(dt, rightWheelSpeedReference);
         leftWheelSpeed = leftWheelFilter.update(dt, leftWheelSpeedReference);
-        ROS_INFO("time step : %f", dt);
         jetbotState = jetbotKinematics::kinematicUpdate(
             jetbotState,
             rightWheelSpeed,

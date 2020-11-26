@@ -45,7 +45,6 @@ public:
     }
 
     void key_callback(const std_msgs::String & msg){
-        ROS_INFO("I'm in key_callback");
         double leftWheelSpeed;
         double rightWheelSpeed;
 
