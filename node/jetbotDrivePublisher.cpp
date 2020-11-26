@@ -22,7 +22,7 @@ public:
         n = ros::NodeHandle("~");
 
         std::string diff_drive_topic, mux_topic, joy_topic, key_topic;
-	n.getParam("diff_drive_topic", diff_drive_topic);
+	    n.getParam("diff_drive_topic", diff_drive_topic);
         n.getParam("keyboard_topic", key_topic);
 
         diff_drive_pub = n.advertise<std_msgs::Float64MultiArray>(diff_drive_topic, 10);

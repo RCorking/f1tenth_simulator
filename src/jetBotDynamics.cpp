@@ -56,12 +56,12 @@ twoWheelBotState jetbotDynamics::update(
         };
         return finalState;    
 }
-lowPassFilter::lowPassFilter(double timeConst, double& filterState) :  state(filterState) {
-    filterCoefficient = -timeConst / (2.3);
-}
+//lowPassFilter::lowPassFilter(double timeConst, double& filterState) :  state(filterState) {
+//    filterCoefficient = -timeConst / (2.3);
+//}
 double lowPassFilter::update(double dt, double input) {
     double filterOutput;
-    filterOutput = state * (filterCoefficient / (dt + filterCoefficient)) + input * (filterCoefficient / (dt + filterCoefficient));
+    filterOutput = *state * (filterCoefficient / (dt + filterCoefficient)) + input * (dt / (dt + filterCoefficient));
     return filterOutput;
 }
 twoWheelBotState jetbotKinematics::kinematicUpdate(
@@ -71,12 +71,12 @@ twoWheelBotState jetbotKinematics::kinematicUpdate(
     twoWheelBotParameters carParameters,
     double dt) {
     twoWheelBotState finalState;
-    double rightLinearWheelSPeed = carParameters.wheelRadius * rightWheelSpeed;
+    double rightLinearWheelSpeed = carParameters.wheelRadius * rightWheelSpeed;
     double leftLinearWheelSpeed = carParameters.wheelRadius * leftWheelSpeed;
     finalState.leftWheelSpeed = leftWheelSpeed;
     finalState.rightWheelSpeed = rightWheelSpeed;
-    finalState.angular_velocity = (rightLinearWheelSPeed - leftLinearWheelSpeed) / (carParameters.track);
-    finalState.velocity = (rightLinearWheelSPeed + leftLinearWheelSpeed) / 2;
+    finalState.angular_velocity = (rightLinearWheelSpeed - leftLinearWheelSpeed) / (carParameters.track);
+    finalState.velocity = (rightLinearWheelSpeed + leftLinearWheelSpeed) / 2;
     finalState.theta = initialState.theta + finalState.angular_velocity * dt;
     finalState.x = initialState.x + std::cos(finalState.theta) * finalState.velocity * dt;
     finalState.y = initialState.y + std::sin(finalState.theta) * finalState.velocity * dt;
@@ -87,3 +87,4 @@ twoWheelBotState jetbotKinematics::kinematicUpdate(
 
 
 
+ 

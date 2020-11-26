@@ -60,13 +60,16 @@ private:
     double leftWheelTorqueCommand;
     double rightWheelSpeed = 0;
     double leftWheelSpeed = 0;
+    double rightWheelSpeedReference = 0.0;
+    double leftWheelSpeedReference = 0.0;
     double max_car_speed;
     double max_steer_angle;
     double motorTimeConstant;
+    double rotationWheelSpeedScale;
     std::string keyboardCommand;
     twoWheelBotParameters jetbotParameters;
     lowPassFilter rightWheelFilter;
-    lowPassFilter leftWheelFitler;
+    lowPassFilter leftWheelFilter;
     // For publishing transformations
     tf2_ros::TransformBroadcaster br;
 
@@ -158,6 +161,8 @@ public:
         n.getParam("jetbot_length" , jetbotParameters.length);
         n.getParam("jetbot_width", jetbotParameters.track);
         n.getParam("jetbot_wheel_damping" , jetbotParameters.wheelDampingFactor);
+        n.getParam("jetbot_motor_timeConstant" , motorTimeConstant);
+        n.getParam("jetbot_rotation_wheel_speed_scale", rotationWheelSpeedScale);
         jetbotParameters.I_z=(1.0/12.0)*(jetbotParameters.mass)*
             (pow(jetbotParameters.track,2.0) + pow(jetbotParameters.length,2.0));   
 
@@ -182,7 +187,7 @@ public:
 
         // Start a subscriber to listen to drive commands
         drive_sub = n.subscribe(diff_drive_topic, 1, &jetbotSimulator::drive_callback, this);
-        key_sub = n.subscribe(keyboard_topic, 1, &jetbotSimulator::pose_callback, this);
+        key_sub = n.subscribe(keyboard_topic, 1, &jetbotSimulator::key_callback, this);
 
         // Start a subscriber to listen to new maps
         //map_sub = n.subscribe(map_topic, 1, &jetbotSimulator::map_callback, this);
@@ -254,9 +259,16 @@ public:
 
         im_server.applyChanges();
         **/
-        rightWheelFilter = lowPassFilter(motorTimeConstant, rightWheelSpeed);
-        leftWheelFitler = lowPassFilter(motorTimeConstant, leftWheelSpeed);
+        //lowPassFilter rightWheelFilter(motorTimeConstant, rightWheelSpeed);
+        //rightWheelFilter= lowPassFilter(motorTimeConstant, rightWheelSpeed);
+        //lowPassFilter leftWheelFilter(motorTimeConstant, leftWheelSpeed);
+        //leftWheelFilter = lowPassFilter(motorTimeConstant, leftWheelSpeed);
 
+        /////This needs to be done in the Constructor of lowPassFilter but doesn't work 
+        rightWheelFilter.state = &rightWheelSpeed;
+        rightWheelFilter.filterCoefficient = motorTimeConstant/2.3;
+        leftWheelFilter.state = &leftWheelSpeed;
+        leftWheelFilter.filterCoefficient = motorTimeConstant/2.3; 
         ROS_INFO("Simulator constructed.");
     
     }
@@ -266,12 +278,16 @@ public:
         // Update the pose 
         ros::Time timestamp = ros::Time::now();
         double current_seconds = timestamp.toSec();
+        double dt = current_seconds - previous_seconds;
+        rightWheelSpeed = rightWheelFilter.update(dt, rightWheelSpeedReference);
+        leftWheelSpeed = leftWheelFilter.update(dt, leftWheelSpeedReference);
+        ROS_INFO("time step : %f", dt);
         jetbotState = jetbotKinematics::kinematicUpdate(
             jetbotState,
             rightWheelSpeed,
             leftWheelSpeed,
             jetbotParameters,
-            current_seconds - previous_seconds);
+            dt);
             
         //jetbotState.leftWheelSpeed = std::min(std::max(jetbotState.leftWheelSpeed , -max_wheel_speed),max_wheel_speed);
         //jetbotState.rightWheelSpeed = std::min(std::max(jetbotState.rightWheelSpeed , -max_wheel_speed),max_wheel_speed);
@@ -282,7 +298,7 @@ public:
 
         /// Make an odom message as well and publish it
         pub_odom(timestamp);
-
+        //ROS_INFO("rightWheelSpeed = %f " , jetbotState.rightWheelSpeed);
     
     }
     ///---------PUBLISHIG HELPER FUNCTIONS-------
@@ -352,30 +368,37 @@ public:
                                         max_wheel_torque;        
     }
     void key_callback(const std_msgs::String& msg) {
-        ros::Time timestamp = ros::Time::now();
-        double currentTime = timestamp.toSec();
-        double dt = currentTime - previousTime;
-        switch (msg.data) {
-        case "w":
-            rightWheelSpeed = rightWheelFilter.update(dt, max_wheel_speed);
-            leftWheelSpeed = leftWheelFitler.update(dt, max_wheel_speed);
-        case "a":
-            rightWheelSpeed = rightWheelFilter.update(dt, max_wheel_speed);
-            leftWheelSpeed = leftWheelFitler.update(dt, -max_wheel_speed);
-        case "d":
-            rightWheelSpeed = rightWheelFilter.update(dt, -max_wheel_speed);
-            leftWheelSpeed = leftWheelFitler.update(dt, max_wheel_speed);
-        case "s":
-            rightWheelSpeed = rightWheelFilter.update(dt, -max_wheel_speed);
-            leftWheelSpeed = leftWheelFitler.update(dt, -max_wheel_speed);
-        case" ":
-            rightWheelSpeed = rightWheelFilter.update(dt, 0);
-            leftWheelSpeed = leftWheelFitler.update(dt, 0);
-
+        if(msg.data =="w") {
+            //rightWheelSpeed = rightWheelFilter.update(dt, max_wheel_speed);
+            //leftWheelSpeed = leftWheelFilter.update(dt, max_wheel_speed);
+            rightWheelSpeedReference = max_wheel_speed;
+            leftWheelSpeedReference = max_wheel_speed;
+            
+            }else if(msg.data == "a"){
+            //rightWheelSpeed = rightWheelFilter.update(dt, max_wheel_speed);
+            //leftWheelSpeed = leftWheelFilter.update(dt, -max_wheel_speed);
+            rightWheelSpeedReference = max_wheel_speed*rotationWheelSpeedScale;
+            leftWheelSpeedReference = -max_wheel_speed*rotationWheelSpeedScale;
+            }else if(msg.data == "d"){
+            //rightWheelSpeed = rightWheelFilter.update(dt, -max_wheel_speed);
+            //leftWheelSpeed = leftWheelFilter.update(dt, max_wheel_speed);
+            rightWheelSpeedReference = -max_wheel_speed*rotationWheelSpeedScale;
+            leftWheelSpeedReference = max_wheel_speed*rotationWheelSpeedScale;
+            }else if(msg.data == "s"){
+            //rightWheelSpeed = rightWheelFilter.update(dt, -max_wheel_speed);
+            //leftWheelSpeed = leftWheelFilter.update(dt, -max_wheel_speed);
+            rightWheelSpeedReference = -max_wheel_speed;
+            leftWheelSpeedReference = -max_wheel_speed;
+            } else if(msg.data == " "){        
+            //rightWheelSpeed = rightWheelFilter.update(dt, 0);
+            //leftWheelSpeed = leftWheelFilter.update(dt, 0);
+            rightWheelSpeedReference = 0.0;
+            leftWheelSpeedReference = 0.0;
+            }
         }
-        previousTime = currentTime;
+        
 
-    }
+    
     void pose_callback(const geometry_msgs::PoseStamped & msg) {
         jetbotState.x = msg.pose.position.x;
         jetbotState.y = msg.pose.position.y;

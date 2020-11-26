@@ -19,9 +19,9 @@ class jetbotDynamics{
 class lowPassFilter {
 public:
     double filterCoefficient; // time to 90% of ss response
-    const double& state;
+    const double* state;
     double update(double dt, double input);
-    lowPassFilter(double, double&);
+    //lowPassFilter(double, double&);
 };
 class jetbotKinematics {
 public:
