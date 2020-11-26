@@ -78,7 +78,7 @@ private:
 
     // Listen for drive commands
     ros::Subscriber drive_sub;
-    ros::Subscriber key_sub;
+    //ros::Subscriber key_sub;
 
     // Listen for a map
     ros::Subscriber map_sub;
@@ -118,14 +118,7 @@ public:
         n = ros::NodeHandle("~");
 
         jetbotState = {.x=0.0, .y=0.0, .theta=0.0, .velocity=0.0, .angular_velocity=0.0, .leftWheelSpeed=0.0, .rightWheelSpeed=0.0, .std_dyn=false};
-        /**jetbotState.x = 0.0; 
-        jetbotState.y = 0.0;
-        jetbotState.theta = 0.0;
-        jetbotState.velocity = 0.0;
-        jetbotState.angular_elocity = 0.0;
-        jetbotState.leftWheelSpeed = 0.0;
-        jetbotState.rightWheelSpeed = 0.0;
-        jetbotState.std_dyn = false;**/
+
         accel = 0.0;
         //desired_speed = 0.0;
         //desired_curvature = 0.0;
@@ -176,9 +169,7 @@ public:
         // Make a publisher for odometry messages
         odom_pub = n.advertise<nav_msgs::Odometry>(odom_topic, 1);
 
-        // Make a publisher for publishing map with obstacles
-        //map_pub = n.advertise<nav_msgs::OccupancyGrid>("/map", 1);
-
+       
         // Make a publisher for ground truth pose
         pose_pub = n.advertise<geometry_msgs::PoseStamped>(gt_pose_topic, 1);
 
@@ -187,82 +178,18 @@ public:
 
         // Start a subscriber to listen to drive commands
         drive_sub = n.subscribe(diff_drive_topic, 1, &jetbotSimulator::drive_callback, this);
-        key_sub = n.subscribe(keyboard_topic, 1, &jetbotSimulator::key_callback, this);
+        //key_sub = n.subscribe(keyboard_topic, 1, &jetbotSimulator::key_callback, this);
 
-        // Start a subscriber to listen to new maps
-        //map_sub = n.subscribe(map_topic, 1, &jetbotSimulator::map_callback, this);
-
+      
         // Start a subscriber to listen to pose messages
         pose_sub = n.subscribe(pose_topic, 1, &jetbotSimulator::pose_callback, this);
         pose_rviz_sub = n.subscribe(pose_rviz_topic, 1, &jetbotSimulator::pose_rviz_callback, this);
 
-        // obstacle subscriber
-        //obs_sub = n.subscribe("/clicked_point", 1, &jetbotSimulator::obs_callback, this);
-
+       
         // get collision safety margin
         n.getParam("coll_threshold", thresh);
         n.getParam("ttc_threshold", ttc_threshold);
         n.getParam("angular_velocity_threshold" , angularVelocityThreshold);
-
-        // OBSTACLE BUTTON:
-        // wait for one map message to get the map data array
-        /**
-        boost::shared_ptr<nav_msgs::OccupancyGrid const> map_ptr;
-        nav_msgs::OccupancyGrid map_msg;
-        map_ptr = ros::topic::waitForMessage<nav_msgs::OccupancyGrid>("/map");
-        if (map_ptr != NULL) {
-            map_msg = *map_ptr;
-        }
-        original_map = map_msg;
-        current_map = map_msg;
-        std::vector<int8_t> map_data_raw = map_msg.data;
-        std::vector<int> map_data(map_data_raw.begin(), map_data_raw.end());
-
-        map_width = map_msg.info.width;
-        map_height = map_msg.info.height;
-        origin_x = map_msg.info.origin.position.x;
-        origin_y = map_msg.info.origin.position.y;
-        map_resolution = map_msg.info.resolution;
-
-        // create button for clearing obstacles
-        visualization_msgs::InteractiveMarker clear_obs_button;
-        clear_obs_button.header.frame_id = "map";
-        // clear_obs_button.pose.position.x = origin_x+(1/3)*map_width*map_resolution;
-        // clear_obs_button.pose.position.y = origin_y+(1/3)*map_height*map_resolution;
-        // TODO: find better positioning of buttons
-        clear_obs_button.pose.position.x = 0;
-        clear_obs_button.pose.position.y = -5;
-        clear_obs_button.scale = 1;
-        clear_obs_button.name = "clear_obstacles";
-        clear_obs_button.description = "Clear Obstacles\n(Left Click)";
-        visualization_msgs::InteractiveMarkerControl clear_obs_control;
-        clear_obs_control.interaction_mode = visualization_msgs::InteractiveMarkerControl::BUTTON;
-        clear_obs_control.name = "clear_obstacles_control";
-        
-        // make a box for the button
-        visualization_msgs::Marker clear_obs_marker;
-        clear_obs_marker.type = visualization_msgs::Marker::CUBE;
-        clear_obs_marker.scale.x = clear_obs_button.scale*0.45;
-        clear_obs_marker.scale.y = clear_obs_button.scale*0.65;
-        clear_obs_marker.scale.z = clear_obs_button.scale*0.45;
-        clear_obs_marker.color.r = 0.0;
-        clear_obs_marker.color.g = 1.0;
-        clear_obs_marker.color.b = 0.0;
-        clear_obs_marker.color.a = 1.0;
-
-        clear_obs_control.markers.push_back(clear_obs_marker);
-        clear_obs_control.always_visible = true;
-        clear_obs_button.controls.push_back(clear_obs_control);
-
-        im_server.insert(clear_obs_button);
-        im_server.setCallback(clear_obs_button.name, boost::bind(&jetbotSimulator::clear_obstacles, this, _1));
-
-        im_server.applyChanges();
-        **/
-        //lowPassFilter rightWheelFilter(motorTimeConstant, rightWheelSpeed);
-        //rightWheelFilter= lowPassFilter(motorTimeConstant, rightWheelSpeed);
-        //lowPassFilter leftWheelFilter(motorTimeConstant, leftWheelSpeed);
-        //leftWheelFilter = lowPassFilter(motorTimeConstant, leftWheelSpeed);
 
         /////This needs to be done in the Constructor of lowPassFilter but doesn't work 
         rightWheelFilter.state = &rightWheelSpeed;
@@ -289,8 +216,6 @@ public:
             jetbotParameters,
             dt);
             
-        //jetbotState.leftWheelSpeed = std::min(std::max(jetbotState.leftWheelSpeed , -max_wheel_speed),max_wheel_speed);
-        //jetbotState.rightWheelSpeed = std::min(std::max(jetbotState.rightWheelSpeed , -max_wheel_speed),max_wheel_speed);
         previous_seconds = current_seconds;
 
         /// Publish the pose as a transformation
@@ -360,43 +285,14 @@ public:
     }
         //--Callback Functions-----//
     void drive_callback(const std_msgs::Float64MultiArray &msg){
-            rightWheelTorqueCommand = msg.data[0];
-            leftWheelTorqueCommand = msg.data[1];
-            rightWheelTorqueCommand = (std::min(std::max(rightWheelTorqueCommand, -1.0),1.0))*
-                                        max_wheel_torque;
-            leftWheelTorqueCommand = (std::min(std::max(leftWheelTorqueCommand, -1.0),1.0))*
-                                        max_wheel_torque;        
+            rightWheelSpeedReference = msg.data[0]*max_wheel_speed;
+            leftWheelSpeedReference = msg.data[1]*max_wheel_speed;
+            rightWheelSpeedReference = std::max(std::min(rightWheelSpeedReference,
+                                    max_wheel_speed), -max_wheel_speed); 
+            leftWheelSpeedReference = std::max(std::min(leftWheelSpeedReference,
+                                    max_wheel_speed), -max_wheel_speed);    
     }
-    void key_callback(const std_msgs::String& msg) {
-        if(msg.data =="w") {
-            //rightWheelSpeed = rightWheelFilter.update(dt, max_wheel_speed);
-            //leftWheelSpeed = leftWheelFilter.update(dt, max_wheel_speed);
-            rightWheelSpeedReference = max_wheel_speed;
-            leftWheelSpeedReference = max_wheel_speed;
-            
-            }else if(msg.data == "a"){
-            //rightWheelSpeed = rightWheelFilter.update(dt, max_wheel_speed);
-            //leftWheelSpeed = leftWheelFilter.update(dt, -max_wheel_speed);
-            rightWheelSpeedReference = max_wheel_speed*rotationWheelSpeedScale;
-            leftWheelSpeedReference = -max_wheel_speed*rotationWheelSpeedScale;
-            }else if(msg.data == "d"){
-            //rightWheelSpeed = rightWheelFilter.update(dt, -max_wheel_speed);
-            //leftWheelSpeed = leftWheelFilter.update(dt, max_wheel_speed);
-            rightWheelSpeedReference = -max_wheel_speed*rotationWheelSpeedScale;
-            leftWheelSpeedReference = max_wheel_speed*rotationWheelSpeedScale;
-            }else if(msg.data == "s"){
-            //rightWheelSpeed = rightWheelFilter.update(dt, -max_wheel_speed);
-            //leftWheelSpeed = leftWheelFilter.update(dt, -max_wheel_speed);
-            rightWheelSpeedReference = -max_wheel_speed;
-            leftWheelSpeedReference = -max_wheel_speed;
-            } else if(msg.data == " "){        
-            //rightWheelSpeed = rightWheelFilter.update(dt, 0);
-            //leftWheelSpeed = leftWheelFilter.update(dt, 0);
-            rightWheelSpeedReference = 0.0;
-            leftWheelSpeedReference = 0.0;
-            }
-        }
-        
+    
 
     
     void pose_callback(const geometry_msgs::PoseStamped & msg) {
@@ -412,21 +308,7 @@ public:
         temp_pose.pose = msg->pose.pose;
         pose_callback(temp_pose);
     }
-    /**void clear_obstacles(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback) {
-        bool clear_obs_clicked = false;
-        if (feedback->event_type == 3) {
-            clear_obs_clicked = true;
-        }
-        if (clear_obs_clicked) {
-            ROS_INFO("Clearing obstacles.");
-            current_map = original_map;
-            map_pub.publish(current_map);
-
-            clear_obs_clicked = false;
-        }
-    }**/
-
-    
+       
 
 
 };

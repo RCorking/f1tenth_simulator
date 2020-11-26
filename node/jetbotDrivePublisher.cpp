@@ -14,7 +14,8 @@ private:
     ros::Publisher diff_drive_pub;
 
     double prev_key_velocity = 0.0;
-    double keyboard_max_torque = 1;
+    double keyboard_max_speed = 1.0;
+    double rotationWheelSpeedScale;
 
 public:
     jetbotDriveCmd()
@@ -24,6 +25,8 @@ public:
         std::string diff_drive_topic, mux_topic, joy_topic, key_topic;
 	    n.getParam("diff_drive_topic", diff_drive_topic);
         n.getParam("keyboard_topic", key_topic);
+        n.getParam("jetbot_rotation_wheel_speed_scale", rotationWheelSpeedScale);
+
 
         diff_drive_pub = n.advertise<std_msgs::Float64MultiArray>(diff_drive_topic, 10);
 
@@ -43,34 +46,34 @@ public:
 
     void key_callback(const std_msgs::String & msg){
         ROS_INFO("I'm in key_callback");
-        double leftWheelTrq;
-        double rightWheelTrq;
+        double leftWheelSpeed;
+        double rightWheelSpeed;
 
         bool publish = true;
 
         if (msg.data == "w"){
-            leftWheelTrq = 1.0;
-            rightWheelTrq = 1.0;
+            leftWheelSpeed = 1.0;
+            rightWheelSpeed = 1.0;
         
         }else if(msg.data=="s"){
-            leftWheelTrq = -1.0;
-            rightWheelTrq = -1.0;
+            leftWheelSpeed = -1.0;
+            rightWheelSpeed = -1.0;
 
         }else if(msg.data == "a"){
-            leftWheelTrq = -1.0;
-            rightWheelTrq = 1.0;
+            leftWheelSpeed = -1.0*rotationWheelSpeedScale;
+            rightWheelSpeed = 1.0*rotationWheelSpeedScale;
 
         }else if(msg.data == "d") {
-            leftWheelTrq = 1.0;
-            rightWheelTrq = -1.0;
+            leftWheelSpeed = 1.0*rotationWheelSpeedScale;
+            rightWheelSpeed = -1.0*rotationWheelSpeedScale;
         }else if (msg.data ==" "){
-            leftWheelTrq = 0.0;
-            rightWheelTrq = 0.0;
+            leftWheelSpeed = 0.0;
+            rightWheelSpeed = 0.0;
         }else {
             publish = false;
         }
         if (publish){
-            publish_to_diff_drive(rightWheelTrq , leftWheelTrq);
+            publish_to_diff_drive(rightWheelSpeed , leftWheelSpeed);
 
         }
 	ROS_INFO("end of key_callback");

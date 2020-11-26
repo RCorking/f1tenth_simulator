@@ -5,17 +5,7 @@
 
 namespace racecar_simulator {
 
-class jetbotDynamics{
-    public:
-        static twoWheelBotState update(
-            const twoWheelBotState initialState,
-            double rightWheelTorque,
-            double leftWheelTorque,
-            twoWheelBotParameters carParameters,
-            const double thresh,
-            double dt); 
-    
-};
+
 class lowPassFilter {
 public:
     double filterCoefficient; // time to 90% of ss response
