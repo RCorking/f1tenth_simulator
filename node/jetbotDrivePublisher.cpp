@@ -75,7 +75,6 @@ public:
             publish_to_diff_drive(rightWheelSpeed , leftWheelSpeed);
 
         }
-	ROS_INFO("end of key_callback");
     }
    
 };
