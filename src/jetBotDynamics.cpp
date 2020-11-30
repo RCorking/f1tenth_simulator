@@ -11,9 +11,11 @@ using namespace racecar_simulator;
     
 double lowPassFilter::update(double dt, double input) {
     double filterOutput;
-    filterOutput = *state * (filterCoefficient / (dt + filterCoefficient)) + input * (dt / (dt + filterCoefficient));
+    double filterCoefficient = timeConstant/2.3;
+    filterOutput = state * (filterCoefficient / (dt + filterCoefficient)) + input * (dt / (dt + filterCoefficient));
     return filterOutput;
 }
+lowPassFilter::lowPassFilter(double& riseTime, double& filterState): timeConstant(riseTime), state(filterState){}
 twoWheelBotState jetbotKinematics::kinematicUpdate(
     const twoWheelBotState initialState,
     double  rightWheelSpeed,

@@ -8,10 +8,10 @@ namespace racecar_simulator {
 
 class lowPassFilter {
 public:
-    double filterCoefficient; // time to 90% of ss response
-    const double* state;
+    double& timeConstant; // time to 90% of ss response
+    const double& state;
     double update(double dt, double input);
-    //lowPassFilter(double, double&);
+    lowPassFilter(double&, double&);
 };
 class jetbotKinematics {
 public:

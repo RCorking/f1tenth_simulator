@@ -112,7 +112,7 @@ private:
 
 public:
 
-    jetbotSimulator(): im_server("jetbot_sim"){
+    jetbotSimulator(): im_server("jetbot_sim"), rightWheelFilter(motorTimeConstant, rightWheelSpeed), leftWheelFilter(motorTimeConstant, leftWheelSpeed){
         n = ros::NodeHandle("~");
 
         jetbotState = {.x=0.0, .y=0.0, .theta=0.0, .velocity=0.0, .angular_velocity=0.0, .leftWheelSpeed=0.0, .rightWheelSpeed=0.0, .std_dyn=false};
@@ -190,10 +190,10 @@ public:
         n.getParam("angular_velocity_threshold" , angularVelocityThreshold);
 
         /////This needs to be done in the Constructor of lowPassFilter but doesn't work 
-        rightWheelFilter.state = &rightWheelSpeed;
+        /**rightWheelFilter.state = &rightWheelSpeed;
         rightWheelFilter.filterCoefficient = motorTimeConstant/2.3;
         leftWheelFilter.state = &leftWheelSpeed;
-        leftWheelFilter.filterCoefficient = motorTimeConstant/2.3; 
+        leftWheelFilter.filterCoefficient = motorTimeConstant/2.3;**/ 
         ROS_INFO("Simulator constructed.");
     
     }
