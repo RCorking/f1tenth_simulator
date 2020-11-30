@@ -189,11 +189,6 @@ public:
         n.getParam("ttc_threshold", ttc_threshold);
         n.getParam("angular_velocity_threshold" , angularVelocityThreshold);
 
-        /////This needs to be done in the Constructor of lowPassFilter but doesn't work 
-        /**rightWheelFilter.state = &rightWheelSpeed;
-        rightWheelFilter.filterCoefficient = motorTimeConstant/2.3;
-        leftWheelFilter.state = &leftWheelSpeed;
-        leftWheelFilter.filterCoefficient = motorTimeConstant/2.3;**/ 
         ROS_INFO("Simulator constructed.");
     
     }
