@@ -15,6 +15,7 @@ private:
 
     double prev_key_velocity = 0.0;
     double keyboard_max_speed = 1.0;
+    double circle_radius = 10.0;
     double rotationWheelSpeedScale;
 
 public:
@@ -65,6 +66,12 @@ public:
         }else if(msg.data == "d") {
             leftWheelSpeed = 1.0*rotationWheelSpeedScale;
             rightWheelSpeed = -1.0*rotationWheelSpeedScale;
+        
+        }else if(msg.data == "q"){
+            leftWheelSpeed = circle_radius*rotationWheelSpeedScale;
+            rightWheelSpeed = -circle_radius*rotationWheelSpeedScale
+        
+
         }else if (msg.data ==" "){
             leftWheelSpeed = 0.0;
             rightWheelSpeed = 0.0;
